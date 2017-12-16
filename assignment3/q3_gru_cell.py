@@ -66,7 +66,41 @@ class GRUCell(tf.nn.rnn_cell.RNNCell):
         # be defined elsewhere!
         with tf.variable_scope(scope):
             ### YOUR CODE HERE (~20-30 lines)
-
+            initializer = tf.contrib.layers.xavier_initializer()
+            ########### Define Variables ##########
+            U_names = ['U_z', 'U_r', 'U_o']
+            U_shape = (self.input_size, self.state_size)
+            W_names = ['W_z', 'W_r', 'W_o']
+            W_shape = (self.state_size, self.state_size)
+            bias_names = ['b_z', 'b_r', 'b_o']
+            bias_shape = (self.output_size,)
+            for names, shape in zip(
+                    [U_names, W_names, bias_names],
+                    [U_shape, W_shape, bias_shape]):
+                for name in names:
+                    if 'b' not in name:
+                        tf.get_variable(name=name, dtype=tf.float32, shape=shape,
+                                        initializer=initializer)
+                    else:
+                        tf.get_variable(name=name, dtype=tf.float32, initializer=tf.zeros(shape))
+            ########### Calculate the result
+            v = lambda x: tf.get_variable(x)
+            ret = []
+            z_t, r_t, o_t = None, None, None
+            for i in range(3):
+                tf.get_variable_scope().reuse_variables()
+                U, W, b = v(U_names[i]), v(W_names[i]), v(bias_names[i])
+                if i == 0:
+                    z_t = tf.nn.sigmoid(
+                        tf.matmul(inputs, U) + tf.matmul(state, W) + b)
+                elif i == 1:
+                    r_t = tf.nn.sigmoid(
+                        tf.matmul(inputs, U) + tf.matmul(state, W) + b)
+                else:
+                    o_t = tf.nn.tanh(
+                        tf.matmul(inputs, U) + r_t * tf.matmul(state, W) + b)
+            h_t = z_t * state + (1 - z_t) * o_t
+            new_state = h_t
             ### END YOUR CODE ###
         # For a GRU, the output and state are the same (N.B. this isn't true
         # for an LSTM, though we aren't using one of those in our
