@@ -102,3 +102,8 @@ ENV/
 
 # downloaded datasets
 datasets/
+data/
+*.zip
+
+# train results
+results/
