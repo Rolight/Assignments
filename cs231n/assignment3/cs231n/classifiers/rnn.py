@@ -219,13 +219,16 @@ class CaptioningRNN(object):
         word_vec, _ = word_embedding_forward(
             self._start * np.ones((N, ), dtype=np.int32), W_embed)
         h, _ = affine_forward(features, W_proj, b_proj)
+        c = np.zeros_like(h)
         for step in range(0, max_length):
             if self.cell_type == 'rnn':
                 h, _ = rnn_step_forward(word_vec, h, Wx, Wh, b)
-                scores, _ = affine_forward(h, W_vocab, b_vocab)
-                captions[:, step] = np.argmax(scores, axis=1)
-                word_vec, _ = word_embedding_forward(captions[:, step],
-                                                     W_embed)
+            elif self.cell_type == 'lstm':
+                h, c, _ = lstm_step_forward(word_vec, h, c, Wx, Wh, b)
+            scores, _ = affine_forward(h, W_vocab, b_vocab)
+            captions[:, step] = np.argmax(scores, axis=1)
+            word_vec, _ = word_embedding_forward(
+                captions[:, step], W_embed)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
