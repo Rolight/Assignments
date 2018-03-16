@@ -5,13 +5,14 @@ import gym
 
 class BCModel:
 
-    def __init__(self, input_dim, output_dim, learning_rate, batch_size):
+    def __init__(self, env_name, input_dim, output_dim, learning_rate, batch_size, layer_size=None):
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.layers_size = [256, 512, 128]
+        self.layers_size = layer_size or [256, 512, 128]
         self.lr = learning_rate
         self.default_batch_size = batch_size
         self.env = None
+        self.env_name = env_name
 
     def add_placeholder(self):
         self.input_placeholder = tf.placeholder(
@@ -70,13 +71,14 @@ class BCModel:
         return sess
 
     def build(self):
-        self.add_placeholder()
-        self.logits = self.add_prediction_op()
-        self.loss = self.add_loss_op(self.logits)
-        self.update_step = self.add_train_op(self.loss)
-        self.sess = self.init_session()
-        var_init = tf.global_variables_initializer()
-        self.sess.run(var_init)
+        with tf.variable_scope(self.env_name, reuse=tf.AUTO_REUSE):
+            self.add_placeholder()
+            self.logits = self.add_prediction_op()
+            self.loss = self.add_loss_op(self.logits)
+            self.update_step = self.add_train_op(self.loss)
+            self.sess = self.init_session()
+            var_init = tf.global_variables_initializer()
+            self.sess.run(var_init)
 
     def create_feed_dict(self, input_batch, output_batch):
         feeds = {
@@ -105,9 +107,9 @@ class BCModel:
         logit = self.sess.run(self.logits, feed_dict=feeds)
         return logit
 
-    def evaluate_reward(self, env_name, rollouts=20):
+    def evaluate_reward(self, rollouts=20):
         if not self.env:
-            self.env = gym.make(env_name)
+            self.env = gym.make(self.env_name)
         returns = []
         max_steps = 1000
         for _ in range(rollouts):
