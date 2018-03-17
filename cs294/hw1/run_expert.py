@@ -15,6 +15,18 @@ import numpy as np
 import tf_util
 import gym
 import load_policy
+from pathlib import Path
+
+expert_data_path = Path('./expert_data/')
+
+
+def save_expert_data(envname, expert_data):
+    expert_data_path.mkdir(exist_ok=True)
+    file_path = expert_data_path / (envname + '.pkl')
+    with open(file_path.resolve(), 'wb') as f:
+        pickle.dump(expert_data, f)
+    print('data saved to %s' % file_path.resolve())
+
 
 def main():
     import argparse
@@ -25,6 +37,7 @@ def main():
     parser.add_argument("--max_timesteps", type=int)
     parser.add_argument('--num_rollouts', type=int, default=20,
                         help='Number of expert roll outs')
+    parser.add_argument('--saved', action='store_true')
     args = parser.parse_args()
 
     print('loading and building expert policy')
@@ -48,7 +61,7 @@ def main():
             totalr = 0.
             steps = 0
             while not done:
-                action = policy_fn(obs[None,:])
+                action = policy_fn(obs[None, :])
                 observations.append(obs)
                 actions.append(action)
                 obs, r, done, _ = env.step(action)
@@ -56,7 +69,8 @@ def main():
                 steps += 1
                 if args.render:
                     env.render()
-                if steps % 100 == 0: print("%i/%i"%(steps, max_steps))
+                if steps % 100 == 0:
+                    print("%i/%i" % (steps, max_steps))
                 if steps >= max_steps:
                     break
             returns.append(totalr)
@@ -67,6 +81,9 @@ def main():
 
         expert_data = {'observations': np.array(observations),
                        'actions': np.array(actions)}
+        if args.saved:
+            save_expert_data(args.envname, expert_data)
+
 
 if __name__ == '__main__':
     main()
