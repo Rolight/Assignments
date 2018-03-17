@@ -107,3 +107,6 @@ data/
 
 # train results
 results/
+
+# pickle file
+*.pkl
