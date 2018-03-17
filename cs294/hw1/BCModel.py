@@ -8,7 +8,7 @@ class BCModel:
     def __init__(self, env_name, input_dim, output_dim, learning_rate, batch_size, layer_size=None):
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.layers_size = layer_size or [256, 512, 128]
+        self.layers_size = layer_size or [128, 512, 64]
         self.lr = learning_rate
         self.default_batch_size = batch_size
         self.env = None
@@ -22,47 +22,52 @@ class BCModel:
 
     def add_prediction_op(self):
         initializer = tf.contrib.layers.xavier_initializer()
-        regularizer = tf.contrib.layers.l2_regularizer(scale=0.01)
+        regularizer = tf.contrib.layers.l2_regularizer(scale=1e-5)
         inputs = self.input_placeholder
         layer1 = tf.layers.dense(
             inputs,
             self.layers_size[0],
             activation=tf.nn.relu,
             kernel_regularizer=regularizer,
-            kernel_initializer=initializer)
+            kernel_initializer=initializer
+        )
 
         layer2 = tf.layers.dense(
             layer1,
             self.layers_size[1],
             activation=tf.nn.relu,
             kernel_regularizer=regularizer,
-            kernel_initializer=initializer)
+            kernel_initializer=initializer
+        )
 
         layer3 = tf.layers.dense(
             layer2,
             self.layers_size[2],
             activation=tf.nn.relu,
             kernel_regularizer=regularizer,
-            kernel_initializer=initializer)
+            kernel_initializer=initializer
+        )
 
         outputs = tf.layers.dense(
             layer3,
             self.output_dim,
             activation=None,
             kernel_regularizer=regularizer,
-            kernel_initializer=initializer)
+            kernel_initializer=initializer
+        )
 
         return outputs
 
     def add_loss_op(self, logits):
         labels = self.expert_output_placeholder
-        loss = tf.nn.sigmoid_cross_entropy_with_logits(
-            labels=labels, logits=logits)
-        loss = tf.reduce_mean(loss)
+        # loss = tf.nn.sigmoid_cross_entropy_with_logits(
+        #     labels=labels, logits=logits)
+        loss = tf.losses.mean_squared_error(labels=labels, predictions=logits)
+        # loss = tf.reduce_mean(loss)
         return loss
 
     def add_train_op(self, loss):
-        optimizer = tf.train.GradientDescentOptimizer(self.lr)
+        optimizer = tf.train.AdamOptimizer(self.lr)
         update_step = optimizer.minimize(loss)
         return update_step
 
@@ -96,7 +101,7 @@ class BCModel:
 
     def generate_batch(self, inputs, outputs, batch_size=None):
         batch_size = batch_size or self.default_batch_size
-        mask = np.random.choice(np.arange(batch_size), batch_size)
+        mask = np.random.choice(np.arange(inputs.shape[0]), batch_size)
         inputs_batch = inputs[mask]
         outputs_batch = outputs[mask]
         return inputs_batch, outputs_batch
