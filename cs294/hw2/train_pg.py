@@ -218,7 +218,7 @@ def train_PG(exp_name='',
         # YOUR_CODE_HERE
         baseline_targets = tf.placeholder(
             name="baseline", shape=(None, ), dtype=tf.float32)
-        baseline_loss = tf.nn.l2_loss(baseline_prediction, baseline_targets)
+        baseline_loss = tf.nn.l2_loss(baseline_prediction - baseline_targets)
         baseline_update_op = tf.train.AdamOptimizer(
             learning_rate).minimize(baseline_loss)
 
