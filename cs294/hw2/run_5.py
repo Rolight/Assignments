@@ -33,6 +33,10 @@ HalfCheetah_command_v2 = [
     "python train_pg.py HalfCheetah-v2 -n 100 -b 20000 -e 5 -rtg -lr 0.025 -l 3 -ep 150 --discount 0.9 --nn_baseline --exp_name HC_v2_lb_20000",
 ]
 
+HalfCheetah_command_final = [
+    "python train_pg.py HalfCheetah-v2 -n 100 -b 50000 -e 5 -rtg -lr 0.025 -l 3 -ep 150 --discount 0.9 --nn_baseline --exp_name HC_final_lb_50000",
+]
+
 
 def run_command(cmd):
     cmd = cmd.split(' ')
@@ -42,7 +46,7 @@ def run_command(cmd):
 
 all_p = []
 
-for cmd in HalfCheetah_command_v2:
+for cmd in HalfCheetah_command_final:
     p = Process(target=run_command, args=(cmd,))
     all_p.append(p)
 
