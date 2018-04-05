@@ -25,7 +25,8 @@ def sample(env,
     """
     paths = []
     """ YOUR CODE HERE """
-    for _ in range(num_paths):
+    for pid in range(num_paths):
+        print('generating sample path %d' % pid)
         last_obs = env.reset()
         path = {
             'observations': [],
