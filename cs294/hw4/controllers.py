@@ -56,7 +56,6 @@ class MPCcontroller(Controller):
         actions = np.array(actions)
 
         last_state = np.array([state for _ in range(self.num_simulated_paths)])
-
         for idx in range(self.horizon):
             action_batch = actions[:, idx]
             next_state = self.dyn_model.predict(last_state, action_batch)

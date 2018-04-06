@@ -10,6 +10,7 @@ import os
 import copy
 import matplotlib.pyplot as plt
 from cheetah_env import HalfCheetahEnvNew
+import tqdm
 
 
 def sample(env,
@@ -19,14 +20,14 @@ def sample(env,
            render=False,
            verbose=False):
     """
-        Write a sampler function which takes in an environment, a controller (either random or the MPC controller), 
-        and returns rollouts by running on the env. 
+        Write a sampler function which takes in an environment, a controller (either random or the MPC controller),
+        and returns rollouts by running on the env.
         Each path can have elements for observations, next_observations, rewards, returns, actions, etc.
     """
     paths = []
     """ YOUR CODE HERE """
-    for pid in range(num_paths):
-        print('generating sample path %d' % pid)
+    for idx in range(num_paths):
+        print('path %d' % idx)
         last_obs = env.reset()
         path = {
             'observations': [],
@@ -35,7 +36,7 @@ def sample(env,
             'returns': [],
             'actions': [],
         }
-        while len(path['observations']) < horizon:
+        for _ in tqdm.tqdm(range(horizon)):
             action = controller.get_action(last_obs)
             obs, reward, done, info = env.step(action)
             if render:
@@ -85,7 +86,7 @@ def compute_normalization(data):
 
 def plot_comparison(env, dyn_model):
     """
-    Write a function to generate plots comparing the behavior of the model predictions for each element of the state to the actual ground truth, using randomly sampled actions. 
+    Write a function to generate plots comparing the behavior of the model predictions for each element of the state to the actual ground truth, using randomly sampled actions.
     """
     """ YOUR CODE HERE """
     pass
@@ -113,15 +114,15 @@ def train(env,
 
     Arguments:
 
-    onpol_iters                 Number of iterations of onpolicy aggregation for the loop to run. 
+    onpol_iters                 Number of iterations of onpolicy aggregation for the loop to run.
 
     dynamics_iters              Number of iterations of training for the dynamics model
     |_                          which happen per iteration of the aggregation loop.
 
     batch_size                  Batch size for dynamics training.
 
-    num_paths_random            Number of paths/trajectories/rollouts generated 
-    |                           by a random agent. We use these to train our 
+    num_paths_random            Number of paths/trajectories/rollouts generated
+    |                           by a random agent. We use these to train our
     |_                          initial dynamics model.
 
     num_paths_onpol             Number of paths to collect at each iteration of
@@ -133,13 +134,13 @@ def train(env,
 
     env_horizon                 Number of timesteps in each path.
 
-    mpc_horizon                 The MPC policy generates actions by imagining 
+    mpc_horizon                 The MPC policy generates actions by imagining
     |                           fictitious rollouts, and picking the first action
     |                           of the best fictitious rollout. This argument is
     |                           how many timesteps should be in each fictitious
     |_                          rollout.
 
-    n_layers/size/activations   Neural network architecture arguments. 
+    n_layers/size/activations   Neural network architecture arguments.
 
     """
 
@@ -203,10 +204,11 @@ def train(env,
     for itr in range(onpol_iters):
         """ YOUR CODE HERE """
         dyn_model.fit(data)
-        paths = sample(env, mpc_controller, num_paths_onpol, env_horizon)
+        paths = sample(env, mpc_controller, num_paths_onpol,
+                       env_horizon, render=render)
         data += paths
 
-        returns = [np.sum(path["reward"]) for path in paths]
+        returns = [np.sum(path["rewards"]) for path in paths]
         costs = [path_cost(cost_fn, path) for path in paths]
         # LOGGING
         # Statistics for performance of MPC policy using
