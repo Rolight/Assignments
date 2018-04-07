@@ -313,8 +313,8 @@ def learn(env,
                 session.run(update_target_fn)
                 num_param_updates = 0
 
-            import datetime
-            print('[iter %d]learning at ' % t, datetime.datetime.now())
+                import datetime
+                print('[iter %d]learning at ' % t, datetime.datetime.now())
 
             #####
 
