@@ -152,6 +152,9 @@ def learn(env,
     target_q_func_vars = tf.get_collection(
         tf.GraphKeys.GLOBAL_VARIABLES, scope="tar_q_func")
 
+    greedy_q_values = q_func(obs_t_float, num_actions,
+                             scope="q_func", reuse=True)
+
     ######
 
     # construct optimization op (with gradient clipping)
@@ -227,9 +230,7 @@ def learn(env,
         if not model_initialized or np.random.rand() <= exploration.value(t):
             action = np.random.randint(num_actions)
         else:
-            q_values = q_func(obs_t_float, num_actions,
-                              scope="q_func", reuse=True)
-            q_values = session.run(q_values, feed_dict={
+            q_values = session.run(greedy_q_values, feed_dict={
                                    obs_t_float: [q_input]})[0]
             action = np.argmax(q_values)
 
