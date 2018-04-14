@@ -146,7 +146,7 @@ def learn(env,
         tf.cast(done_mask_ph < 1, tf.float32) + (rew_t_ph) * \
         tf.cast(done_mask_ph >= 1, tf.float32)
 
-    total_error = 0.5 * np.sum((tar_q_values - q_values) ** 2)
+    total_error = tf.reduce_mean((tar_q_values - q_values) ** 2)
     q_func_vars = tf.get_collection(
         tf.GraphKeys.GLOBAL_VARIABLES, scope="q_func")
     target_q_func_vars = tf.get_collection(
